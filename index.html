@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Water Bottle Puzzle (8L,5L,3L)</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at top, #222 0, #05060a 60%);
+      color: #f7f7f7;
+    }
+
+    .game-container {
+      width: min(900px, 95vw);
+      padding: 24px;
+      border-radius: 20px;
+      background: rgba(15, 15, 25, 0.9);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+
+    .title {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: #a8b3cf;
+      margin-top: 4px;
+    }
+
+    .stats {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      font-size: 0.9rem;
+    }
+
+    .pill {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(255, 255, 255, 0.02);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill span.label {
+      color: #a3aed0;
+      font-size: 0.8rem;
+    }
+
+    .pill span.value {
+      font-weight: 600;
+    }
+
+    .btn {
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      background: linear-gradient(135deg, #273c75, #192a56);
+      color: #fff;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5);
+      background: linear-gradient(135deg, #4070f4, #273c75);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .bottles-area {
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-around;
+      gap: 18px;
+      padding: 18px 12px 6px;
+      border-radius: 16px;
+      background: radial-gradient(circle at top, #111627 0, #050814 70%);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .bottle-wrapper {
+      flex: 1;
+      max-width: 220px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .bottle-label {
+      font-weight: 600;
+      font-size: 0.95rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: #d1d9ff;
+    }
+
+    .bottle {
+      position: relative;
+      width: 80px;
+      height: 180px;
+      border-radius: 30px 30px 18px 18px;
+      border: 2px solid rgba(255, 255, 255, 0.35);
+      background: linear-gradient(160deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0.01));
+      overflow: hidden;
+      box-shadow: 0 10px 18px rgba(0, 0, 0, 0.7);
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+    }
+
+    .bottle::before {
+      /* Bottle neck */
+      content: "";
+      position: absolute;
+      top: -18px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 30px;
+      height: 20px;
+      border-radius: 10px 10px 4px 4px;
+      border: 2px solid rgba(255, 255, 255, 0.4);
+      border-bottom: none;
+      background: linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(210, 220, 255, 0.15));
+    }
+
+    .bottle.selected {
+      border-color: #00e0ff;
+      box-shadow: 0 0 20px rgba(0, 224, 255, 0.6);
+      transform: translateY(-4px) scale(1.02);
+    }
+
+    .bottle-target {
+      outline: 2px dashed rgba(0, 224, 255, 0.4);
+      outline-offset: 4px;
+    }
+
+    .water {
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+      height: 0;
+      background: linear-gradient(180deg, rgba(0, 199, 255, 0.9), rgba(0, 119, 255, 0.9));
+      box-shadow: 0 0 18px rgba(0, 180, 255, 0.7);
+      transition: height 0.25s ease-in-out;
+    }
+
+    .water::before {
+      /* water highlight */
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 10px;
+      right: 10px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.4);
+      filter: blur(3px);
+      opacity: 0.9;
+    }
+
+    .volume-text {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 0.75rem;
+      background: rgba(0, 0, 0, 0.55);
+      padding: 3px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+    }
+
+    .capacity-text {
+      font-size: 0.8rem;
+      color: #9aa4c6;
+    }
+
+    .footer {
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px dashed rgba(255, 255, 255, 0.15);
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.86rem;
+    }
+
+    .message {
+      color: #a8b3cf;
+    }
+
+    .message.win {
+      color: #3fe0a8;
+      font-weight: 600;
+    }
+
+    .instructions {
+      color: #848fb3;
+      max-width: 460px;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 650px) {
+      .bottles-area {
+        flex-direction: row;
+      }
+      .bottle {
+        height: 150px;
+        width: 70px;
+      }
+    }
+
+    @media (max-width: 520px) {
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .footer {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+      .bottles-area {
+        gap: 10px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="game-container">
+    <div class="header">
+      <div>
+        <div class="title">3 Bottle Puzzle</div>
+        <div class="subtitle">
+          Goal: Bottle A = 4 L, Bottle B = 4 L, Bottle C = 0 L
+        </div>
+      </div>
+      <div class="stats">
+        <div class="pill">
+          <span class="label">Moves</span>
+          <span class="value" id="moves">0</span>
+        </div>
+        <button class="btn" id="resetBtn">Reset</button>
+      </div>
+    </div>
+
+    <div class="bottles-area">
+      <!-- Bottle A -->
+      <div class="bottle-wrapper" data-index="0">
+        <div class="bottle-label">Bottle A</div>
+        <div class="bottle" id="bottle-0">
+          <div class="water" id="water-0"></div>
+          <div class="volume-text" id="volume-0">0 L</div>
+        </div>
+        <div class="capacity-text">Capacity: 8 L</div>
+      </div>
+
+      <!-- Bottle B -->
+      <div class="bottle-wrapper" data-index="1">
+        <div class="bottle-label">Bottle B</div>
+        <div class="bottle" id="bottle-1">
+          <div class="water" id="water-1"></div>
+          <div class="volume-text" id="volume-1">0 L</div>
+        </div>
+        <div class="capacity-text">Capacity: 5 L</div>
+      </div>
+
+      <!-- Bottle C -->
+      <div class="bottle-wrapper" data-index="2">
+        <div class="bottle-label">Bottle C</div>
+        <div class="bottle" id="bottle-2">
+          <div class="water" id="water-2"></div>
+          <div class="volume-text" id="volume-2">0 L</div>
+        </div>
+        <div class="capacity-text">Capacity: 3 L</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="instructions">
+        Tap one bottle to select it (source). Then tap another bottle to pour into it.
+        You can’t overfill a bottle — it stops when the destination is full or the source is empty.
+      </div>
+      <div class="message" id="message">
+        Ready! Start from A = 8 L, B = 0 L, C = 0 L.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Capacities for A, B, C
+    const capacities = [8, 5, 3];
+
+    // Current volumes
+    let volumes = [8, 0, 0];
+
+    // Goal state
+    const goal = [4, 4, 0];
+
+    // Selection and moves
+    let selectedIndex = null;
+    let moves = 0;
+
+    const moveElem = document.getElementById("moves");
+    const messageElem = document.getElementById("message");
+
+    function updateUI() {
+      volumes.forEach((vol, i) => {
+        const water = document.getElementById("water-" + i);
+        const volumeText = document.getElementById("volume-" + i);
+        const bottle = document.getElementById("bottle-" + i);
+
+        const capacity = capacities[i];
+        const percent = (vol / capacity) * 100;
+        water.style.height = percent + "%";
+        volumeText.textContent = vol + " L";
+
+        // remove target outline
+        bottle.classList.remove("bottle-target");
+      });
+
+      moveElem.textContent = moves.toString();
+
+      if (isGoalReached()) {
+        messageElem.textContent = "Nice! You reached 4 L, 4 L, 0 L 🎉";
+        messageElem.classList.add("win");
+      } else {
+        messageElem.classList.remove("win");
+        if (selectedIndex !== null) {
+          messageElem.textContent = `Selected Bottle ${["A", "B", "C"][selectedIndex]} – now tap a bottle to pour into.`;
+        } else {
+          messageElem.textContent = "Tap a bottle to select it, then tap another to pour.";
+        }
+      }
+    }
+
+    function isGoalReached() {
+      return volumes[0] === goal[0] &&
+             volumes[1] === goal[1] &&
+             volumes[2] === goal[2];
+    }
+
+    function resetGame() {
+      volumes = [8, 0, 0];
+      moves = 0;
+      clearSelection();
+      updateUI();
+    }
+
+    function clearSelection() {
+      selectedIndex = null;
+      document.querySelectorAll(".bottle").forEach(b => {
+        b.classList.remove("selected", "bottle-target");
+      });
+    }
+
+    function selectBottle(index) {
+      const bottleElem = document.getElementById("bottle-" + index);
+
+      // If nothing selected yet
+      if (selectedIndex === null) {
+        selectedIndex = index;
+        bottleElem.classList.add("selected");
+
+        // highlight possible targets
+        document.querySelectorAll(".bottle").forEach((b, i) => {
+          if (i !== index) b.classList.add("bottle-target");
+        });
+
+        updateUI();
+        return;
+      }
+
+      // If clicked the same bottle -> deselect
+      if (selectedIndex === index) {
+        clearSelection();
+        updateUI();
+        return;
+      }
+
+      // Now we have a source (selectedIndex) and destination (index)
+      const source = selectedIndex;
+      const dest = index;
+
+      const amountSourceHas = volumes[source];
+      const destSpace = capacities[dest] - volumes[dest];
+
+      if (amountSourceHas === 0 || destSpace === 0) {
+        // nothing changes, but we can move selection to new bottle as source
+        clearSelection();
+        selectBottle(index);
+        return;
+      }
+
+      const pourAmount = Math.min(amountSourceHas, destSpace);
+
+      volumes[source] -= pourAmount;
+      volumes[dest] += pourAmount;
+      moves += 1;
+
+      clearSelection();
+      updateUI();
+    }
+
+    // Event listeners for bottle clicks
+    document.querySelectorAll(".bottle-wrapper").forEach(wrapper => {
+      wrapper.addEventListener("click", () => {
+        const idx = parseInt(wrapper.getAttribute("data-index"), 10);
+        selectBottle(idx);
+      });
+    });
+
+    // Reset button
+    document.getElementById("resetBtn").addEventListener("click", resetGame);
+
+    // Initial render
+    updateUI();
+  </script>
+</body>
+</html>
